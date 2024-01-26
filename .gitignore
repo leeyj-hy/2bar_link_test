@@ -1,5 +1,9 @@
-CMakeFiles/
+/CMakeFiles
+
 CMakeCache.txt
+
 EPOS_2BAR
+
 Makefile
+
 cmake_install.cmake
