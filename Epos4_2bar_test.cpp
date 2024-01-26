@@ -208,6 +208,16 @@ int PrepareDemo(unsigned int* p_pErrorCode)
 
 //user code begin
 
+int EposHaltPositionMovement(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode)
+{
+  int lResult = MMC_SUCCESS;
+  if(VCS_HaltPositionMovement(p_DeviceHandle, p_usNodeId, &p_rlErrorCode) == 0)
+			{
+				LogError("VCS_HaltPositionMovement", lResult, p_rlErrorCode);
+				lResult = MMC_FAILED;
+			}
+    return lResult;
+}
 
 void  INThandler(int sig)
 {
@@ -239,13 +249,76 @@ void  INThandler(int sig)
 }
 
 
+int EposSetMode(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode)
+{
+  int lResult = MMC_SUCCESS;
+	stringstream msg;
+
+	msg << "set profile current mode, node = " << p_usNodeId;
+	LogInfo(msg.str());
+
+	if(VCS_ActivateCurrentMode(p_DeviceHandle, p_usNodeId, &p_rlErrorCode) == 0)
+	{
+		LogError("VCS_ActivateCurrentMode", lResult, p_rlErrorCode);
+		lResult = MMC_FAILED;
+	}
+  return lResult;
+}
+
+
+int EposPositionFeedback(HANDLE p_DeviceHandle, unsigned short p_usNodeId, int* p_Positionals , unsigned int & p_rlErrorCode)
+{
+  int lResult = MMC_SUCCESS;
+  stringstream msg;
+
+  if(VCS_GetPositionIs(p_DeviceHandle, p_usNodeId, p_Positionals, &p_rlErrorCode)==0)
+  {
+    msg<<"pos : "<< p_Positionals;
+    LogInfo(msg.str());
+    lResult = MMC_FAILED;
+  }
+  return lResult;
+}
+
 //user code end
 
 int main(int argc, char** argv)
 {
-
+  int lResult = MMC_FAILED;
+  unsigned int ulErrorCode = 0;
+  unsigned int lErrorCode = 0;
+  int g_position = 0;
+  int pos_deg = 0;
+  SetDefaultParameters();
   signal(SIGINT, INThandler);
+  if((lResult = OpenDevice(&ulErrorCode))!=MMC_SUCCESS)
+    {
+      LogError("OpenDevice", lResult, ulErrorCode);
+      return lResult;
+    }
+  if((lResult = PrepareDemo(&ulErrorCode))!=MMC_SUCCESS)
+			{
+				LogError("PrepareDemo", lResult, ulErrorCode);
+				return lResult;
+			}
+  if((lResult = EposSetMode(g_pKeyHandle, g_usNodeId, lErrorCode))!=MMC_SUCCESS)
+			{
+				LogError("Set Mode", lResult, ulErrorCode);
+				return lResult;
+			}
 
+  while(1)
+  {
+    if(lResult = EposPositionFeedback(g_pKeyHandle, g_usNodeId, &g_position, lErrorCode)!=MMC_SUCCESS)
+    {
+      LogError("Position read", lResult, ulErrorCode);
+      return lResult;
+    }
+
+    pos_deg = g_position *360 / 5000 / 26;
+    cout << pos_deg<<endl;
+    sleep(1);
+  }
 
   return 0;
 }
