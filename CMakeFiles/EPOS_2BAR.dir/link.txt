@@ -1,1 +1,0 @@
-/usr/bin/c++ -rdynamic CMakeFiles/EPOS_2BAR.dir/Epos4_2bar_test.cpp.o -o EPOS_2BAR  -lEposCmd 
