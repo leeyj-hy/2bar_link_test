@@ -6,7 +6,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_executable(${PROJECT_NAME} Epos4_2bar_test.cpp)
+set(PJT_SRC_FILES Epos4_2bar_test.cpp)
+add_executable(${PROJECT_NAME} ${PJT_SRC_FILES})
 
 target_link_libraries(${PROJECT_NAME} -lEposCmd)
 

@@ -22,6 +22,10 @@
 #include <sys/time.h>
 
 #include <signal.h>
+#include <cmath>
+
+#define _PI 3.1416
+#define _hPI 1.5708
 
 typedef void* HANDLE;
 typedef int BOOL;
@@ -208,6 +212,22 @@ int PrepareDemo(unsigned int* p_pErrorCode)
 
 //user code begin
 
+int EposGoalCurrent(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode, int targetCurrent)
+{
+  int lResult = MMC_SUCCESS;
+  if(VCS_SetCurrentMustEx(p_DeviceHandle, p_usNodeId, targetCurrent, &p_rlErrorCode) == 0)
+			{
+				LogError("VCS_SetCurrentMustEx", lResult, p_rlErrorCode);
+				lResult = MMC_FAILED;
+			}
+  return lResult;
+}
+
+float deg2rad(int inputDegree)
+{
+  return inputDegree*_PI/180;
+}
+
 int EposHaltPositionMovement(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode)
 {
   int lResult = MMC_SUCCESS;
@@ -289,6 +309,7 @@ int main(int argc, char** argv)
   unsigned int lErrorCode = 0;
   int g_position = 0;
   int pos_deg = 0;
+  float pos_rad = 0;
   SetDefaultParameters();
   signal(SIGINT, INThandler);
   if((lResult = OpenDevice(&ulErrorCode))!=MMC_SUCCESS)
@@ -316,8 +337,11 @@ int main(int argc, char** argv)
     }
 
     pos_deg = g_position *360 / 5000 / 26;
-    cout << pos_deg<<endl;
-    sleep(1);
+    pos_rad = deg2rad(pos_deg);
+    cout << "POS_RADIAN : "<<pos_rad << " gravity : " << (1-cos(abs(pos_rad)))*100<<endl;
+
+    //EposGoalCurrent(g_pKeyHandle, g_usNodeId, lErrorCode, (1-cos(abs(pos_rad)))*100);
+    // sleep(1);
   }
 
   return 0;
