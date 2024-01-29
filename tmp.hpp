@@ -1,13 +1,17 @@
-//============================================================================
-// Name        : Epos4_2bar_test.cpp
-// Author      : YongJae Lee
-// Version     : 0.1
-// Copyright   : maxon motor ag 2014-2021
-// Description : Epos controller 2bar link test in C++
-//============================================================================
+#ifndef GRAVITYCOMPENSATION__
+#define GRAVITYCOMPENSATION__
 
-#include <iostream>
+#ifndef MMC_SUCCESS
+	#define MMC_SUCCESS 0
+#endif
+
+#ifndef MMC_FAILED
+	#define MMC_FAILED 1
+#endif
+
+
 #include "Definitions.h"
+#include <iostream>
 #include <string.h>
 #include <sstream>
 #include <unistd.h>
@@ -26,19 +30,14 @@
 
 #define _PI 3.1416
 #define _hPI 1.5708
+#define _encResolution 5000
+#define _gearRatio 26
+
+using namespace std;
+
 
 typedef void* HANDLE;
 typedef int BOOL;
-
-#ifndef MMC_SUCCESS
-	#define MMC_SUCCESS 0
-#endif
-
-#ifndef MMC_FAILED
-	#define MMC_FAILED 1
-#endif
-
-using namespace std;
 
 
 void* g_pKeyHandle = 0;
@@ -49,33 +48,39 @@ string g_interfaceName;
 string g_portName;
 int g_baudrate = 0;
 
-unsigned short m_NormCurrent = 2730;//mA
-unsigned short m_MaxCurrent = 3000;//mA
-//EAppMode g_eAppMode = AM_DEMO;
-
 const string g_programName = "Epo4_test";
 
-//keyboard int 
-void     INThandler(int);
+void  LogError(string functionName, int p_lResult, unsigned int p_ulErrorCode);
+void  LogInfo(string message);
 
-void LogError(string functionName, int p_lResult, unsigned int p_ulErrorCode);
-void LogInfo(string message);
 int   OpenDevice(unsigned int* p_pErrorCode);
 int   CloseDevice(unsigned int* p_pErrorCode);
+
+int   PrepareDemo(unsigned int* p_pErrorCode);
 void  SetDefaultParameters();
-int  EposSetMotorType();
-int  EposSetMotorParameter();
-int EposHaltPositionMovement(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode);
+int   EposSetMotorType();
+int   EposSetMotorParameter();
+
+int   EposGoalCurrent(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode, int targetCurrent);
+int   EposHaltPositionMovement(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode);
+int   EposSetMode(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode);
+int   EposPositionFeedback(HANDLE p_DeviceHandle, unsigned short p_usNodeId, int* p_Positionals , unsigned int & p_rlErrorCode);
+
+float deg2rad(int inputDegree);
+
 
 //example code start
+
 void LogError(string functionName, int p_lResult, unsigned int p_ulErrorCode)
 {
 	cerr << g_programName << ": " << functionName << " failed (result=" << p_lResult << ", errorCode=0x" << std::hex << p_ulErrorCode << ")"<< endl;
 }
+
 void LogInfo(string message)
 {
 	cout << message << endl;
 }
+
 
 void SetDefaultParameters()
 {
@@ -302,47 +307,4 @@ int EposPositionFeedback(HANDLE p_DeviceHandle, unsigned short p_usNodeId, int* 
 
 //user code end
 
-int main(int argc, char** argv)
-{
-  int lResult = MMC_FAILED;
-  unsigned int ulErrorCode = 0;
-  unsigned int lErrorCode = 0;
-  int g_position = 0;
-  int pos_deg = 0;
-  float pos_rad = 0;
-  SetDefaultParameters();
-  signal(SIGINT, INThandler);
-  if((lResult = OpenDevice(&ulErrorCode))!=MMC_SUCCESS)
-    {
-      LogError("OpenDevice", lResult, ulErrorCode);
-      return lResult;
-    }
-  if((lResult = PrepareDemo(&ulErrorCode))!=MMC_SUCCESS)
-			{
-				LogError("PrepareDemo", lResult, ulErrorCode);
-				return lResult;
-			}
-  if((lResult = EposSetMode(g_pKeyHandle, g_usNodeId, lErrorCode))!=MMC_SUCCESS)
-			{
-				LogError("Set Mode", lResult, ulErrorCode);
-				return lResult;
-			}
-
-  while(1)
-  {
-    if(lResult = EposPositionFeedback(g_pKeyHandle, g_usNodeId, &g_position, lErrorCode)!=MMC_SUCCESS)
-    {
-      LogError("Position read", lResult, ulErrorCode);
-      return lResult;
-    }
-
-    pos_deg = g_position *360 / 5000 / 26;
-    pos_rad = deg2rad(pos_deg);
-    cout << "POS_RADIAN : "<<pos_rad << " gravity : " << (1-cos(abs(pos_rad)))*100<<endl;
-
-    //EposGoalCurrent(g_pKeyHandle, g_usNodeId, lErrorCode, (1-cos(abs(pos_rad)))*100);
-    // sleep(1);
-  }
-
-  return 0;
-}
+#endif // !GRAVITYCOMPENSATION__
