@@ -16,7 +16,7 @@ unsigned short m_NormCurrent = 2730;//mA
 unsigned short m_MaxCurrent = 3000;//mA
 //EAppMode g_eAppMode = AM_DEMO;
 
-
+MaxonJoint shoulder;
 
 //keyboard int 
 void  INThandler(int);

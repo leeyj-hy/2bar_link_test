@@ -42,18 +42,112 @@ typedef int BOOL;
 class MaxonJoint
 {
 private:
-  /* data */
+
+  void* g_pKeyHandle = 0;
+  unsigned short g_usNodeId = 1;
+  string g_deviceName;
+  string g_protocolStackName;
+  string g_interfaceName;
+  string g_portName;
+  int g_baudrate = 0;
+
+  const string g_programName = "Epo4_test";
+
 public:
-  MaxonJoint(/* args */);
+  MaxonJoint();
   ~MaxonJoint();
+  void  LogError(string functionName, int p_lResult, unsigned int p_ulErrorCode);
+  void  LogInfo(string message);
+
+  int   OpenDevice(unsigned int* p_pErrorCode);
+  int   CloseDevice(unsigned int* p_pErrorCode);
+
+  int   PrepareDemo(unsigned int* p_pErrorCode);
+  void  SetDefaultParameters();
+  int   EposSetMotorType();
+  int   EposSetMotorParameter();
+
+  int   EposGoalCurrent(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode, int targetCurrent);
+  int   EposHaltPositionMovement(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode);
+  int   EposSetMode(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode);
+  int   EposPositionFeedback(HANDLE p_DeviceHandle, unsigned short p_usNodeId, int* p_Positionals , unsigned int & p_rlErrorCode);
+
+  float deg2rad(int inputDegree);
 };
 
-MaxonJoint::MaxonJoint(/* args */)
+MaxonJoint::MaxonJoint()
 {
+  
+}
+
+void MaxonJoint::LogError(string functionName, int p_lResult, unsigned int p_ulErrorCode)
+{
+
+}
+
+void  MaxonJoint::LogInfo(string message)
+{
+
+}
+
+int   MaxonJoint::OpenDevice(unsigned int* p_pErrorCode)
+{
+
+}
+
+int   MaxonJoint::CloseDevice(unsigned int* p_pErrorCode)
+{
+
+}
+
+int   MaxonJoint::PrepareDemo(unsigned int* p_pErrorCode)
+{
+
+}
+
+void  MaxonJoint::SetDefaultParameters()
+{
+
+}
+
+int   MaxonJoint::EposSetMotorType()
+{
+
+}
+
+int   MaxonJoint::EposSetMotorParameter()
+{
+
+}
+
+int   MaxonJoint::EposGoalCurrent(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode, int targetCurrent)
+{
+
+}
+
+int   MaxonJoint::EposHaltPositionMovement(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode)
+{
+
+}
+
+int   MaxonJoint::EposSetMode(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode)
+{
+
+}
+
+int   MaxonJoint::EposPositionFeedback(HANDLE p_DeviceHandle, unsigned short p_usNodeId, int* p_Positionals , unsigned int & p_rlErrorCode)
+{
+
+}
+
+float MaxonJoint::deg2rad(int inputDegree)
+{
+
 }
 
 MaxonJoint::~MaxonJoint()
 {
+
 }
 
 
