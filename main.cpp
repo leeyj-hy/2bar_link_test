@@ -29,29 +29,29 @@ int main(int argc, char** argv)
   int g_position = 0;
   int pos_deg = 0;
   float pos_rad = 0;
-  SetDefaultParameters();
+  shoulder.SetDefaultParameters();
   signal(SIGINT, INThandler);
-  if((lResult = OpenDevice(&ulErrorCode))!=MMC_SUCCESS)
+  if((lResult = shoulder.OpenDevice(&ulErrorCode))!=MMC_SUCCESS)
     {
-      LogError("OpenDevice", lResult, ulErrorCode);
+      shoulder.LogError("OpenDevice", lResult, ulErrorCode);
       return lResult;
     }
-  if((lResult = PrepareDemo(&ulErrorCode))!=MMC_SUCCESS)
+  if((lResult = shoulder.PrepareDemo(&ulErrorCode))!=MMC_SUCCESS)
 			{
-				LogError("PrepareDemo", lResult, ulErrorCode);
+				shoulder.LogError("PrepareDemo", lResult, ulErrorCode);
 				return lResult;
 			}
-  if((lResult = EposSetMode(g_pKeyHandle, g_usNodeId, lErrorCode))!=MMC_SUCCESS)
+  if((lResult = shoulder.EposSetMode(shoulder.g_pKeyHandle, g_usNodeId, lErrorCode))!=MMC_SUCCESS)
 			{
-				LogError("Set Mode", lResult, ulErrorCode);
+				shoulder.LogError("Set Mode", lResult, ulErrorCode);
 				return lResult;
 			}
 
   while(1)
   {
-    if(lResult = EposPositionFeedback(g_pKeyHandle, g_usNodeId, &g_position, lErrorCode)!=MMC_SUCCESS)
+    if(lResult = shoulder.EposPositionFeedback(g_pKeyHandle, g_usNodeId, &g_position, lErrorCode)!=MMC_SUCCESS)
     {
-      LogError("Position read", lResult, ulErrorCode);
+      shoulder.LogError("Position read", lResult, ulErrorCode);
       return lResult;
     }
 
