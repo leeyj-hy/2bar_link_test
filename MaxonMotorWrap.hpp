@@ -54,7 +54,7 @@ private:
   const string g_programName = "Epo4_test";
 
 public:
-  MaxonJoint();
+  MaxonJoint(int id = 1);
   ~MaxonJoint();
   void  LogError(string functionName, int p_lResult, unsigned int p_ulErrorCode);
   void  LogInfo(string message);
@@ -75,76 +75,308 @@ public:
   float deg2rad(int inputDegree);
 };
 
-MaxonJoint::MaxonJoint()
+/*
+- Function: MaxonJoint
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
+MaxonJoint::MaxonJoint(int id = 1)
 {
-  
+  g_usNodeId = id;
+	g_deviceName = "EPOS4"; 
+	g_protocolStackName = "MAXON SERIAL V2"; 
+	g_interfaceName = "USB"; 
+	g_portName = "USB0"; 
+	g_baudrate = 1000000; 
 }
 
+/*
+- Function: LogError
+- Description: log error on terminal
+- Parameters: string functionName, int p_lResult, unsigned int p_ulErrorCode
+- ReturnParameters: void
+*/
 void MaxonJoint::LogError(string functionName, int p_lResult, unsigned int p_ulErrorCode)
 {
-
+  cerr << g_programName << ": " << functionName << " failed (result=" << p_lResult << ", errorCode=0x" << std::hex << p_ulErrorCode << ")"<< endl;
 }
 
+/*
+- Function: LogInfo
+- Description: log information on terminal
+- Parameters: string message
+- ReturnParameters: void
+*/
 void  MaxonJoint::LogInfo(string message)
 {
-
+  cout << message << endl;
 }
 
+/*
+- Function: OpenDevice
+- Description:
+- Parameters: unsigned int* p_pErrorCode
+- ReturnParameters: int lResult
+*/
 int   MaxonJoint::OpenDevice(unsigned int* p_pErrorCode)
 {
+  int lResult = MMC_FAILED;
 
+	char* pDeviceName = new char[255];
+	char* pProtocolStackName = new char[255];
+	char* pInterfaceName = new char[255];
+	char* pPortName = new char[255];
+
+	strcpy(pDeviceName, g_deviceName.c_str());
+	strcpy(pProtocolStackName, g_protocolStackName.c_str());
+	strcpy(pInterfaceName, g_interfaceName.c_str());
+	strcpy(pPortName, g_portName.c_str());
+
+	LogInfo("Open device...");
+
+	g_pKeyHandle = VCS_OpenDevice(pDeviceName, pProtocolStackName, pInterfaceName, pPortName, p_pErrorCode);
+
+	if(g_pKeyHandle!=0 && *p_pErrorCode == 0)
+	{
+		unsigned int lBaudrate = 0;
+		unsigned int lTimeout = 0;
+
+		if(VCS_GetProtocolStackSettings(g_pKeyHandle, &lBaudrate, &lTimeout, p_pErrorCode)!=0)
+		{
+			if(VCS_SetProtocolStackSettings(g_pKeyHandle, g_baudrate, lTimeout, p_pErrorCode)!=0)
+			{
+				if(VCS_GetProtocolStackSettings(g_pKeyHandle, &lBaudrate, &lTimeout, p_pErrorCode)!=0)
+				{
+					if(g_baudrate==(int)lBaudrate)
+					{
+						lResult = MMC_SUCCESS;
+            LogInfo("Device Successfully Opened!");
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		g_pKeyHandle = 0;
+	}
+
+	delete []pDeviceName;
+	delete []pProtocolStackName;
+	delete []pInterfaceName;
+	delete []pPortName;
+
+	return lResult;
 }
 
+/*
+- Function: CloseDevice
+- Description:
+- Parameters: unsigned int* p_pErrorCode
+- ReturnParameters: int lResult
+*/
 int   MaxonJoint::CloseDevice(unsigned int* p_pErrorCode)
 {
+  int lResult = MMC_FAILED;
+  
 
+	*p_pErrorCode = 0;
+
+	LogInfo("Close device");
+
+	if(VCS_CloseDevice(g_pKeyHandle, p_pErrorCode)!=0 && *p_pErrorCode == 0)
+	{
+		lResult = MMC_SUCCESS;
+	}
+
+	return lResult;
 }
 
+/*
+- Function: PrepareDemo
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 int   MaxonJoint::PrepareDemo(unsigned int* p_pErrorCode)
 {
+	int lResult = MMC_SUCCESS;
+	BOOL oIsFault = 0;
 
+	if(VCS_GetFaultState(g_pKeyHandle, g_usNodeId, &oIsFault, p_pErrorCode ) == 0)
+	{
+		LogError("VCS_GetFaultState", lResult, *p_pErrorCode);
+		lResult = MMC_FAILED;
+	}
+
+	if(lResult==0)
+	{
+		if(oIsFault)
+		{
+			stringstream msg;
+			msg << "clear fault, node = '" << g_usNodeId << "'";
+			LogInfo(msg.str());
+
+			if(VCS_ClearFault(g_pKeyHandle, g_usNodeId, p_pErrorCode) == 0)
+			{
+				LogError("VCS_ClearFault", lResult, *p_pErrorCode);
+				lResult = MMC_FAILED;
+			}
+		}
+
+		if(lResult==0)
+		{
+			BOOL oIsEnabled = 0;
+
+			if(VCS_GetEnableState(g_pKeyHandle, g_usNodeId, &oIsEnabled, p_pErrorCode) == 0)
+			{
+				LogError("VCS_GetEnableState", lResult, *p_pErrorCode);
+				lResult = MMC_FAILED;
+			}
+
+			if(lResult==0)
+			{
+				if(!oIsEnabled)
+				{
+					if(VCS_SetEnableState(g_pKeyHandle, g_usNodeId, p_pErrorCode) == 0)
+					{
+						LogError("VCS_SetEnableState", lResult, *p_pErrorCode);
+						lResult = MMC_FAILED;
+					}
+				}
+			}
+		}
+	}
+	return lResult;
 }
 
+/*
+- Function: SetDefaultParameters
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 void  MaxonJoint::SetDefaultParameters()
 {
 
 }
 
+/*
+- Function: EposSetMotorType
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 int   MaxonJoint::EposSetMotorType()
 {
 
 }
 
+/*
+- Function: EposSetMotorParameter
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 int   MaxonJoint::EposSetMotorParameter()
 {
 
 }
 
+/*
+- Function: EposGoalCurrent
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 int   MaxonJoint::EposGoalCurrent(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode, int targetCurrent)
 {
-
+  int lResult = MMC_SUCCESS;
+  if(VCS_SetCurrentMustEx(p_DeviceHandle, p_usNodeId, targetCurrent, &p_rlErrorCode) == 0)
+			{
+				LogError("VCS_SetCurrentMustEx", lResult, p_rlErrorCode);
+				lResult = MMC_FAILED;
+			}
+  return lResult;
 }
 
+/*
+- Function: EposHaltPositionMovement
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 int   MaxonJoint::EposHaltPositionMovement(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode)
 {
-
+  int lResult = MMC_SUCCESS;
+  if(VCS_HaltPositionMovement(p_DeviceHandle, p_usNodeId, &p_rlErrorCode) == 0)
+			{
+				LogError("VCS_HaltPositionMovement", lResult, p_rlErrorCode);
+				lResult = MMC_FAILED;
+			}
+    return lResult;
 }
 
+/*
+- Function: EposSetMode
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 int   MaxonJoint::EposSetMode(HANDLE p_DeviceHandle, unsigned short p_usNodeId, unsigned int & p_rlErrorCode)
 {
+  int lResult = MMC_SUCCESS;
+	stringstream msg;
 
+	msg << "set profile current mode, node = " << p_usNodeId;
+	LogInfo(msg.str());
+
+	if(VCS_ActivateCurrentMode(p_DeviceHandle, p_usNodeId, &p_rlErrorCode) == 0)
+	{
+		LogError("VCS_ActivateCurrentMode", lResult, p_rlErrorCode);
+		lResult = MMC_FAILED;
+	}
+  return lResult;
 }
 
+/*
+- Function: EposPositionFeedback
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 int   MaxonJoint::EposPositionFeedback(HANDLE p_DeviceHandle, unsigned short p_usNodeId, int* p_Positionals , unsigned int & p_rlErrorCode)
 {
+  int lResult = MMC_SUCCESS;
+  stringstream msg;
 
+  if(VCS_GetPositionIs(p_DeviceHandle, p_usNodeId, p_Positionals, &p_rlErrorCode)==0)
+  {
+    msg<<"pos : "<< p_Positionals;
+    LogInfo(msg.str());
+    lResult = MMC_FAILED;
+  }
+  return lResult;
 }
 
+/*
+- Function: deg2rad
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 float MaxonJoint::deg2rad(int inputDegree)
 {
-
+    return inputDegree*_PI/180;
 }
 
+/*
+- Function: 
+- Description:
+- Parameters: 
+- ReturnParameters: 
+*/
 MaxonJoint::~MaxonJoint()
 {
 
